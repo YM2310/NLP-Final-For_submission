@@ -1,13 +1,13 @@
-import json
 import numpy as np
 from matplotlib import pyplot as plt
-from nltk.tokenize import word_tokenize
 from sklearn.metrics import f1_score, accuracy_score, ConfusionMatrixDisplay
 import gensim.downloader as api
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from keras.models import load_model
+import Downloader
 from config import model_file_path, word_embedding, test_file_path
 from Utils import dataReader,prepare_data_for_model
+import os.path
 
 def two_way_from_three_way(labels):
     two_way=[]
@@ -33,7 +33,9 @@ def model_res_to_labels(results):
 def test():
     glove = api.load(word_embedding)
     max_length = 50
-
+    if not os.path.isfile(model_file_path):
+        print("Model Not Found- Downloading Model")
+        Downloader.Download()
     model = load_model(model_file_path)
     print("loaded glove")
     data_for_test = dataReader(test_file_path)
@@ -46,7 +48,7 @@ def test():
     ConfusionMatrixDisplay.from_predictions(
         gold_labels, predictions_labels)
     plt.show()
-    f1_three_way=f1_score(gold_labels,predictions_labels)
+    f1_three_way=f1_score(gold_labels,predictions_labels, average=None)
 
     two_way_predictions=two_way_from_three_way(predictions_labels)
     gold_labels_predictions=two_way_from_three_way(gold_labels)
@@ -54,7 +56,7 @@ def test():
     ConfusionMatrixDisplay.from_predictions(
         gold_labels_predictions, two_way_predictions)
     plt.show()
-    f1_two_way=f1_score(gold_labels_predictions,two_way_predictions)
+    f1_two_way=f1_score(gold_labels_predictions,two_way_predictions, average=None)
 
     print(f"""
             Two way results:
