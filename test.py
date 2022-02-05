@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import f1_score, accuracy_score, ConfusionMatrixDisplay
 import gensim.downloader as api
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.sequence import pad_sequences
 from keras.models import load_model
 import Downloader
 from config import model_file_path, word_embedding, test_file_path
@@ -71,9 +71,9 @@ Three way results:
         entailment={f1_three_way[0]}
         neutral={f1_three_way[1]}
         contradiction={f1_three_way[2]}"""
-    with open(f"{test_file_path}-RESULTS.txt", 'w') as file:
+    with open("RESULTS.txt", 'w') as file:
         file.write(results)
-        print(f"Written results to file: {test_file_path}-RESULTS.txt")
+        print(f"Written results to file: RESULTS.txt")
     print(results)
 
     return

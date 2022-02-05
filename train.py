@@ -1,9 +1,10 @@
 import json
 import numpy as np
 from nltk.tokenize import word_tokenize
-from tensorflow.keras import layers
 from tensorflow import keras
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+from keras import layers
+from tensorflow import keras
+from keras.preprocessing.sequence import pad_sequences
 import gensim.downloader as api
 from config import word_embedding
 from config import train_dataset_file_path
@@ -35,9 +36,9 @@ def chunks(l, n):
         yield l[si:si + (d + 1 if i < r else d)]
 
 def create_and_compile_model(word_embbeding):
-    pretrainedEmbeddingLayer = create_pretrained_embedding_layer(word_embbeding)
+    pretrained_embedding_layer = create_pretrained_embedding_layer(word_embbeding)
     model = keras.models.Sequential()
-    model.add(pretrainedEmbeddingLayer)
+    model.add(pretrained_embedding_layer)
     model.add(layers.Bidirectional(layers.LSTM(128, dropout=0.3)))
     model.add(layers.Dense(3, activation='softmax'))
     loss = keras.losses.CategoricalCrossentropy(from_logits=False)
@@ -48,14 +49,15 @@ def create_and_compile_model(word_embbeding):
     return model
 
 def train_lstm_model():
+    print("Loading word-embeddings")
     glove = api.load(word_embedding)
-    print("loaded glove")
+    print("Processing data for model")
     data_for_train = dataReader(train_dataset_file_path)
-    print('data ready')
     k_fold_num = 8
     max_length = 50
     num_of_labels=3
     sentences, gold_labels = prepare_data_for_model(data_for_train, glove)
+    print('data ready')
     model=create_and_compile_model(glove)
     sentences_chunks = list(chunks(sentences, k_fold_num))
     labels_chunks = list(chunks(gold_labels, k_fold_num))
@@ -63,6 +65,8 @@ def train_lstm_model():
     for i in range(k_fold_num):
         train_sequences = []
         train_labels = []
+
+        # we devide the data to k chunks to train in k-fold method
         for j in range(k_fold_num):
             if j != i:
                 train_sequences.extend(sentences_chunks[j])
@@ -72,6 +76,7 @@ def train_lstm_model():
         validation_sequences = sentences_chunks[i]
         validation_labels = np.array(labels_to_ints(labels_chunks[i]))
 
+        # we pad the data to fit the model
         train_padded = np.array(pad_sequences(train_sequences, maxlen=max_length, padding='post', truncating='post'))
         train_labels = keras.utils.to_categorical(train_labels, num_classes=num_of_labels)
 
@@ -81,8 +86,11 @@ def train_lstm_model():
 
         model.fit(train_padded, train_labels, epochs=10, validation_data=(validation_padded, validation_labels),
                   verbose=2)
-        print('training iteration: ', i)
+        print(f'training iteration: {i} of {k_fold_num}')
+    print("Training complete. Saving Model")
     model.save('LSTM-Model.h5')
+    print("Saved model as: LSTM-Model.h5")
+
 
 
 if __name__ == '__main__':
