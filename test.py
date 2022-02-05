@@ -31,13 +31,14 @@ def model_res_to_labels(results):
     return labels
 
 def test():
+    print("Loading word embeddings")
     glove = api.load(word_embedding)
     max_length = 50
     if not os.path.isfile(model_file_path):
         print("Model Not Found- Downloading Model")
         Downloader.Download()
     model = load_model(model_file_path)
-    print("loaded glove")
+    print("Acquired prerequisites. Starting test")
     data_for_test = dataReader(test_file_path)
     test_sentences,gold_labels = prepare_data_for_model(data_for_test,glove)
     test_padded = np.array(pad_sequences(test_sentences, maxlen=max_length, padding='post', truncating='post'))
@@ -58,18 +59,23 @@ def test():
     plt.show()
     f1_two_way=f1_score(gold_labels_predictions,two_way_predictions, average=None)
 
-    print(f"""
-            Two way results:
-                Accuracy={accuracy_two_way}
-                f1:
-                    entailment={f1_two_way[0]}
-                    non-entailment={f1_two_way[1]}
-            Three way results:
-                Accuracy={accuracy_three_way}
-                f1:
-                    entailment={f1_three_way[0]}
-                    neutral={f1_three_way[1]}
-                    contradiction={f1_three_way[2]}""")
+    results=f"""
+Two way results:
+    Accuracy={accuracy_two_way}
+    f1:
+        entailment={f1_two_way[0]}
+        non-entailment={f1_two_way[1]}
+Three way results:
+    Accuracy={accuracy_three_way}
+    f1:
+        entailment={f1_three_way[0]}
+        neutral={f1_three_way[1]}
+        contradiction={f1_three_way[2]}"""
+    with open(f"{test_file_path}-RESULTS.txt", 'w') as file:
+        file.write(results)
+        print(f"Written results to file: {test_file_path}-RESULTS.txt")
+    print(results)
+
     return
 
 if __name__ == '__main__':
